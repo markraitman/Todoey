@@ -11,10 +11,16 @@ class TodoListTableViewController: UITableViewController {
     
     //MARK: - Properties
     var itemArray = ["Find Mike", "Buy Eggos", "Destroy Demogorgon"]
+    let defaults = UserDefaults.standard
+    
     
     //MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        if let items = defaults.array(forKey: "TodoListArray") as? [String] {
+            itemArray = items
+        }
     }
     
     //MARK: - Actions
@@ -30,6 +36,7 @@ class TodoListTableViewController: UITableViewController {
         // Данный блок кода добавляет введенный пользователем текст в массив itemArray и обновляет таблицу tableView
         let action = UIAlertAction(title: "Добавить элемент", style: .default) { (action) in
             self.itemArray.append(textField.text!)
+            self.defaults.set(self.itemArray, forKey: "TodoListArray")
             self.tableView.reloadData()
         }
         
