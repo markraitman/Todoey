@@ -10,20 +10,36 @@ import UIKit
 class TodoListTableViewController: UITableViewController {
     
     //MARK: - Properties
-    var itemArray = ["Find Mike", "Buy Eggos", "Destroy Demogorgon"]
+    
+    var itemArray = [Item]()
     let defaults = UserDefaults.standard
     
     
     //MARK: - Lifecycle
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        if let items = defaults.array(forKey: "TodoListArray") as? [String] {
-            itemArray = items
-        }
+        let newItem = Item()
+        newItem.title = "FindMike"
+        itemArray.append(newItem)
+        
+        let newItem2 = Item()
+        newItem2.title = "Buy eggos"
+        itemArray.append(newItem2)
+        
+        let newItem3 = Item()
+        newItem3.title = "Destroy Demogorgon"
+        itemArray.append(newItem3)
+        
+        
+//        if let items = defaults.array(forKey: "TodoListArray") as? [String] {
+//            itemArray = items
+//        }
     }
     
     //MARK: - Actions
+    
     // Эта функция вызывается всякий раз, когда пользователь нажимает кнопку "+" на панели навигации
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
         // Создание пустого текстового поля для ввода
@@ -35,7 +51,10 @@ class TodoListTableViewController: UITableViewController {
         // Создание действия "Добавить элемент", которое будет выполняться при нажатии на соответствующую кнопку
         // Данный блок кода добавляет введенный пользователем текст в массив itemArray и обновляет таблицу tableView
         let action = UIAlertAction(title: "Добавить элемент", style: .default) { (action) in
-            self.itemArray.append(textField.text!)
+            let newItem = Item()
+            newItem.title = textField.text!
+            
+            self.itemArray.append(newItem)
             self.defaults.set(self.itemArray, forKey: "TodoListArray")
             self.tableView.reloadData()
         }
@@ -56,6 +75,7 @@ class TodoListTableViewController: UITableViewController {
     
     
     // MARK: - Table view data source
+    
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // Возвращает количество элементов в массиве itemArray
         return itemArray.count
@@ -64,10 +84,14 @@ class TodoListTableViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         // Получение ячейки таблицы с идентификатором ToDoItemCell по индексу
         let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
+        
+        let item = itemArray[indexPath.row]
     
         // Задание текста для отображения в текущей ячейке таблицы
         // Берется соответствующий элемент из массива itemArray с помощью индекса indexPath.row
-        cell.textLabel?.text = itemArray[indexPath.row]
+        cell.textLabel?.text = item.title
+        
+        cell.accessoryType = item.done ? .checkmark : .none
     
         // Возврат ячейки таблицы
         return cell
@@ -75,22 +99,18 @@ class TodoListTableViewController: UITableViewController {
     
     
     //MARK: - Table view delegate methods
+    
    // Эта функция вызывается при выборе пользователем строки в таблице.
    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
        // Выводим элемент, соответствующий выбранной строке.
        print(itemArray[indexPath.row])
        
+       itemArray[indexPath.row].done = !itemArray[indexPath.row].done
+       
+       tableView.reloadData()
+       
        // Снимаем выделение с строки и делаем анимацию, если это нужно.
        tableView.deselectRow(at: indexPath, animated: true)
-       
-       // Проверяем, есть ли уже галочка у выбранной ячейки.
-       if tableView.cellForRow(at: indexPath)?.accessoryType == .checkmark {
-           // Если есть, удаляем галочку.
-           tableView.cellForRow(at: indexPath)?.accessoryType = .none
-       } else {
-           // Если нет, добавляем галочку к выбранной ячейке.
-           tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
-       }
    }
    
 
