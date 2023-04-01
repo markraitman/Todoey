@@ -12,30 +12,14 @@ class TodoListTableViewController: UITableViewController {
     //MARK: - Properties
     
     var itemArray = [Item]()
-    let defaults = UserDefaults.standard
-    
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
     
     //MARK: - Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let newItem = Item()
-        newItem.title = "FindMike"
-        itemArray.append(newItem)
-        
-        let newItem2 = Item()
-        newItem2.title = "Buy eggos"
-        itemArray.append(newItem2)
-        
-        let newItem3 = Item()
-        newItem3.title = "Destroy Demogorgon"
-        itemArray.append(newItem3)
-        
-        
-//        if let items = defaults.array(forKey: "TodoListArray") as? [String] {
-//            itemArray = items
-//        }
+        loadItems()
     }
     
     //MARK: - Actions
@@ -55,7 +39,7 @@ class TodoListTableViewController: UITableViewController {
             newItem.title = textField.text!
             
             self.itemArray.append(newItem)
-            self.defaults.set(self.itemArray, forKey: "TodoListArray")
+            self.saveItems()
             self.tableView.reloadData()
         }
         
@@ -86,13 +70,13 @@ class TodoListTableViewController: UITableViewController {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
         
         let item = itemArray[indexPath.row]
-    
+        
         // Задание текста для отображения в текущей ячейке таблицы
         // Берется соответствующий элемент из массива itemArray с помощью индекса indexPath.row
         cell.textLabel?.text = item.title
         
         cell.accessoryType = item.done ? .checkmark : .none
-    
+        
         // Возврат ячейки таблицы
         return cell
     }
@@ -100,63 +84,46 @@ class TodoListTableViewController: UITableViewController {
     
     //MARK: - Table view delegate methods
     
-   // Эта функция вызывается при выборе пользователем строки в таблице.
-   override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-       // Выводим элемент, соответствующий выбранной строке.
-       print(itemArray[indexPath.row])
-       
-       itemArray[indexPath.row].done = !itemArray[indexPath.row].done
-       
-       tableView.reloadData()
-       
-       // Снимаем выделение с строки и делаем анимацию, если это нужно.
-       tableView.deselectRow(at: indexPath, animated: true)
-   }
-   
-
-    /*
-    // Override to support conditional editing of the table view.
-    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the specified item to be editable.
-        return true
+    // Эта функция вызывается при выборе пользователем строки в таблице.
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        // Выводим элемент, соответствующий выбранной строке.
+        print(itemArray[indexPath.row])
+        
+        itemArray[indexPath.row].done = !itemArray[indexPath.row].done
+        saveItems()
+        
+        // Снимаем выделение с строки и делаем анимацию, если это нужно.
+        tableView.deselectRow(at: indexPath, animated: true)
     }
-    */
-
-    /*
-    // Override to support editing the table view.
-    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
-        if editingStyle == .delete {
-            // Delete the row from the data source
-            tableView.deleteRows(at: [indexPath], with: .fade)
-        } else if editingStyle == .insert {
-            // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-        }    
+    
+    //MARK: - Data manager methods
+    
+    // Эта функция сохраняет массив itemArray в файл по адресу dataFilePath с помощью PropertyListEncoder.
+    func saveItems() {
+        let encoder = PropertyListEncoder()
+        do {
+            let data = try encoder.encode(itemArray)
+            
+            // Записывает закодированные данные на диск по указанному адресу в dataFilePath.
+            try data.write(to: dataFilePath!)
+            
+        } catch {
+            print("Ошибка при кодировании массива элементов, \(error)")
+        }
     }
-    */
-
-    /*
-    // Override to support rearranging the table view.
-    override func tableView(_ tableView: UITableView, moveRowAt fromIndexPath: IndexPath, to: IndexPath) {
-
+    
+    // Эта функция загружает элементы из файла по адресу dataFilePath в массив itemArray с помощью PropertyListDecoder.
+    func loadItems() {
+        if let data = try? Data(contentsOf: dataFilePath!) {
+            let decoder = PropertyListDecoder()
+            do {
+                // Декодирует полученные данные с диска в массив объектов типа Item и присваивает его itemArray.
+                itemArray = try decoder.decode([Item].self, from: data)
+            } catch {
+                print("Ошибка: \(error.localizedDescription)")
+            }
+        }
     }
-    */
-
-    /*
-    // Override to support conditional rearranging of the table view.
-    override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the item to be re-orderable.
-        return true
-    }
-    */
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
+    
+    
 }
